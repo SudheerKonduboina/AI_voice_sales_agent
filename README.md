@@ -397,7 +397,7 @@ venv\Scripts\python.exe -m bandit -r agent crm
   <a href="https://github.com/SudheerKonduboina">
     <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
   </a>
-  <a href="https://sudheerkonduboina.vercel.app">
+  <a href="https://www.linkedin.com/in/sudheerkonduboina/">
     <img src="https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=vercel&logoColor=white" alt="Portfolio" />
   </a>
 </p>
