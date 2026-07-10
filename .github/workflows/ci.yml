@@ -12,6 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Build Dashboard
+        run: |
+          cd dashboard
+          npm ci
+          npm run build
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -36,4 +49,4 @@ jobs:
         run: mypy agent/ crm/ --ignore-missing-imports --check-untyped-defs
 
       - name: Run tests with coverage
-        run: pytest tests/ -v --tb=short --cov=agent --cov=crm --cov-report=term-missing --cov-fail-under=100
+        run: PYTHONPATH=. pytest tests/ -v --tb=short --cov=agent --cov=crm --cov-report=term-missing --cov-fail-under=100
