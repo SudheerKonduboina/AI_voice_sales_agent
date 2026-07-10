@@ -567,4 +567,3 @@ def test_chat_ollama_invalid_url_scheme():
             [{"role": "user", "content": "hi"}],
             {"provider": "ollama", "ollama_base_url": "ftp://localhost:11434"},
         )
-

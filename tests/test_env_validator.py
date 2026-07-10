@@ -143,4 +143,3 @@ def test_validate_environment_ollama_invalid_scheme(tmp_path, base_cfg):
     warnings = validate_environment(cfg, tmp_path)
     assert len(warnings) > 0
     assert any("Ollama server is unreachable" in w for w in warnings)
-
