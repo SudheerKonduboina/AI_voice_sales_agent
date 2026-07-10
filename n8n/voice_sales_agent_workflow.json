@@ -1,0 +1,153 @@
+{
+  "name": "AI Voice Sales Agent - Orchestration",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger (hourly)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/pending-leads",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "Get Pending Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 0],
+      "notes": "Calls agent/api.py's /pending-leads endpoint, which reads the Excel CRM directly."
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "leads",
+        "options": {}
+      },
+      "name": "Split Out Leads",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Loop Over Leads",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [660, 0],
+      "notes": "Process one lead per iteration so a single failed call doesn't block the rest."
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8000/call",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"lead_id\": $json.lead_id, \"mode\": \"simulate\" } }}",
+        "options": {
+          "timeout": 480000
+        }
+      },
+      "name": "Call Lead (agent API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, -80],
+      "notes": "Switch mode to 'live' once voice_pipeline.py is wired to real telephony. Timeout is generous since a real call can run several minutes."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "Booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Meeting Booked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1100, -80]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sales-agent@yourcompany.example.com",
+        "toEmail": "={{ $env.SALES_TEAM_EMAIL }}",
+        "subject": "=Meeting booked: {{ $json.lead_id }}",
+        "text": "=A meeting was booked by the AI voice agent.\n\nLead: {{ $json.lead_id }}\nMeeting: {{ $json.meeting_datetime }}\nSummary: {{ $json.conversation_summary }}\nRequirements: {{ $json.customer_requirements }}",
+        "options": {}
+      },
+      "name": "Notify Sales Team",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1320, -160],
+      "notes": "Optional - configure SMTP credentials, or swap for a Slack node."
+    },
+    {
+      "parameters": {},
+      "name": "Loop Back",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1320, 0]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (hourly)": {
+      "main": [[{ "node": "Get Pending Leads", "type": "main", "index": 0 }]]
+    },
+    "Get Pending Leads": {
+      "main": [[{ "node": "Split Out Leads", "type": "main", "index": 0 }]]
+    },
+    "Split Out Leads": {
+      "main": [[{ "node": "Loop Over Leads", "type": "main", "index": 0 }]]
+    },
+    "Loop Over Leads": {
+      "main": [
+        [{ "node": "Call Lead (agent API)", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Call Lead (agent API)": {
+      "main": [[{ "node": "Meeting Booked?", "type": "main", "index": 0 }]]
+    },
+    "Meeting Booked?": {
+      "main": [
+        [{ "node": "Notify Sales Team", "type": "main", "index": 0 }],
+        [{ "node": "Loop Back", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify Sales Team": {
+      "main": [[{ "node": "Loop Over Leads", "type": "main", "index": 0 }]]
+    },
+    "Loop Back": {
+      "main": [[{ "node": "Loop Over Leads", "type": "main", "index": 0 }]]
+    }
+  },
+  "meta": {
+    "notes": "Import via n8n UI: Workflows -> Import from File. Requires agent/api.py running locally (uvicorn api:app --port 8000) since this workflow talks to it over HTTP for both reading pending leads and triggering calls. The Excel file itself is never touched directly by n8n in this design — api.py owns all reads/writes to avoid two processes fighting over the same .xlsx file."
+  }
+}

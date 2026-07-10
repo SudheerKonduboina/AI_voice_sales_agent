@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Syntax check (compileall)
+        run: python -m compileall agent crm tests
+
+      - name: Lint check (ruff)
+        run: ruff check .
+
+      - name: Format check (ruff format)
+        run: ruff format . --check
+
+      - name: Type check (mypy)
+        run: mypy agent/ crm/ --ignore-missing-imports --check-untyped-defs
+
+      - name: Run tests with coverage
+        run: pytest tests/ -v --tb=short --cov=agent --cov=crm --cov-report=term-missing --cov-fail-under=100

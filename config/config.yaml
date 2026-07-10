@@ -1,0 +1,83 @@
+# Central configuration for the AI Voice Sales Agent.
+# Copy to config.local.yaml and adjust if you don't want to edit this directly.
+
+logging:
+  console_level: "INFO"       # DEBUG | INFO | WARNING | ERROR
+  file_level: "DEBUG"
+  error_level: "ERROR"
+  max_bytes: 5242880          # 5 MB per log file before rotation
+  backup_count: 5             # number of rotated backups to keep
+
+company:
+  name: "Acme CRM Solutions"
+  caller_purpose: "a quick call about how Acme CRM can help your sales team book more meetings"
+  knowledge_base_path: "config/knowledge_base.md"
+
+crm:
+  excel_path: "crm/leads_template.xlsx"
+  sheet_name: "Leads"
+
+llm:
+  provider: "ollama"        # llama_cpp | ollama | openai
+  temperature: 0.3
+  max_history_turns: 4         # trim conversation history sent to the LLM
+  stream: true
+  stream_fallback: true        # fall back to non-streaming if stream fails
+  max_retries: 2
+  timeout_secs: 120
+  stream_timeout_secs: 30
+
+  llama_cpp:                   # fully venv-contained — no system-wide install
+    model_path: "models/qwen2.5-3b-instruct-q4_k_m.gguf"
+    n_ctx: 4096
+    n_threads: 4                # bump toward your CPU's core count for more speed
+    max_tokens: 300
+
+  ollama_base_url: "http://localhost:11434"   # only used if provider: ollama
+  ollama_model: "qwen2.5:3b"                       # or "qwen2.5:7b" etc — must be `ollama pull`ed first
+  ollama_num_ctx: 4096
+  ollama_num_predict: 120
+  openai_model: "gpt-4o-mini"                  # only used if provider: openai
+
+rag:
+  top_k: 2
+  min_score: 0.01
+  allow_full_fallback: false   # never inject full KB unless explicitly enabled
+  cache_size: 32               # LRU cache entries for repeated queries
+
+memory:
+  keep_turn_pairs: 4           # last N user+assistant pairs kept in context
+
+analytics:
+  enabled: true
+  report_dir: "logs/analytics"
+
+stt:
+  provider: "whisper"
+  whisper_model: "base"        # tiny|base|small|medium|large — bigger = slower, more accurate
+
+tts:
+  provider: "piper"
+  piper_voice: "en_US-lessac-medium"   # download via piper's voice downloader
+
+call:
+  max_call_duration_seconds: 420       # hang up safety net (7 min)
+  max_silence_seconds: 8               # end call if no response after this long
+  ring_no_answer_seconds: 25
+
+telephony:
+  # Real outbound calling requires a SIP trunk (e.g. Twilio Elastic SIP Trunking)
+  # wired into LiveKit or Pipecat. This project ships with a text-mode
+  # simulator (agent/simulate_call.py) so you can build/test the conversation
+  # logic without a telephony account. See docs/SETUP.md "Going live" section.
+  provider: "twilio"
+  twilio_account_sid: "${TWILIO_ACCOUNT_SID}"
+  twilio_auth_token: "${TWILIO_AUTH_TOKEN}"
+  twilio_from_number: "${TWILIO_FROM_NUMBER}"
+
+n8n:
+  agent_api_base_url: "http://localhost:8000"   # where agent/api.py runs
+
+voice:
+  interruption_enabled: true
+

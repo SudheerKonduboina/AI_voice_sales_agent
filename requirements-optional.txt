@@ -1,0 +1,12 @@
+# Optional heavy dependencies — not installed by default.
+# Use these only if you are running the llama_cpp provider
+# (in-process GGUF model) instead of Ollama.
+#
+# Install with:
+#   pip install -r requirements-optional.txt
+#
+# After installing, set llm.provider: "llama_cpp" in config/config.yaml
+# and run: python scripts/download_model.py
+
+llama-cpp-python>=0.2.90
+huggingface_hub>=0.23

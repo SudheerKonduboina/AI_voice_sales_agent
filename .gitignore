@@ -1,0 +1,63 @@
+# ==========================================
+# AI Voice Sales Agent -- Gitignore File
+# ==========================================
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+ENV_DIR/
+
+# Python Build / Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Coverage Reports
+.coverage
+htmlcov/
+coverage.xml
+*.lcov
+nosetests.xml
+
+# Project logs and outputs
+logs/
+*.log
+benchmark_output.txt
+benchmark_output.log
+
+# Model Weights / Binary Files
+models/
+*.gguf
+
+# Environment variables & secrets
+.env
+.env.local
+
+# Operating System specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE Settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# ==========================================
+# Frontend React Dashboard specific ignores
+# ==========================================
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.env
+dashboard/*.log
+dashboard/.eslintcache
